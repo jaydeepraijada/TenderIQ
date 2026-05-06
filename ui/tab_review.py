@@ -1,6 +1,7 @@
 import streamlit as st
 
 from core import audit
+from core.config import BIDDER_NAMES
 from core.fallback import load_criteria
 from core.schemas import Criterion
 from ui.components import confidence_bar, verdict_pill
@@ -46,15 +47,39 @@ def render() -> None:
 
         with st.container(border=True):
             col1, col2 = st.columns([3, 1])
+            friendly = BIDDER_NAMES.get(bidder_id, bidder_id)
             with col1:
-                st.markdown(f"**{bidder_id}** — {v['criterion_id']}: {crit_title}")
-                st.markdown(f"Verdict: {verdict_pill(v['verdict'])}")
+                st.markdown(
+                    f'<div style="font-weight:700;font-size:1rem;color:#0D1B2A;">'
+                    f'{friendly}</div>'
+                    f'<div style="font-size:0.85rem;color:#64748B;margin-top:2px;">'
+                    f'{v["criterion_id"]}: {crit_title}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(verdict_pill(v["verdict"]), unsafe_allow_html=True)
                 if v.get("extracted_value"):
-                    st.markdown(f"Extracted value: `{v['extracted_value']}`")
+                    st.markdown(
+                        f'<div style="margin-top:6px;font-size:0.85rem;">'
+                        f'<strong>Extracted value:</strong> '
+                        f'<code>{v["extracted_value"]}</code></div>',
+                        unsafe_allow_html=True,
+                    )
                 if v.get("reason"):
-                    st.markdown(f"Reason: _{v['reason']}_")
+                    st.markdown(
+                        f'<div style="background:#FFFBEB;border-left:3px solid #F59E0B;'
+                        f'padding:8px 12px;border-radius:0 6px 6px 0;margin-top:8px;'
+                        f'font-size:0.85rem;color:#374151;">'
+                        f'<strong>Reason:</strong> {v["reason"]}</div>',
+                        unsafe_allow_html=True,
+                    )
                 if v.get("source") and v["source"].get("snippet"):
-                    st.markdown(f"Source snippet: _{v['source']['snippet']}_")
+                    st.markdown(
+                        f'<div style="background:#F8FAFC;border:1px solid #E2E8F0;'
+                        f'padding:8px 12px;border-radius:6px;margin-top:6px;'
+                        f'font-size:0.82rem;color:#374151;font-style:italic;">'
+                        f'"{v["source"]["snippet"]}"</div>',
+                        unsafe_allow_html=True,
+                    )
             with col2:
                 conf = v.get("combined_confidence", 0.0)
                 confidence_bar(conf, "Certainty in assessment")

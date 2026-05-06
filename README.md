@@ -1,3 +1,16 @@
+---
+title: TenderIQ
+emoji: ⚖️
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+sdk_version: 1.39.0
+app_file: app.py
+pinned: true
+license: agpl-3.0
+short_description: Explainable AI for Government Tender Evaluation (CRPF Hackathon)
+---
+
 # TenderIQ — Explainable AI for Tender Evaluation
 
 AI-powered eligibility evaluation of bidders against government tender criteria, built for the **CRPF Hackathon, Theme 3**.

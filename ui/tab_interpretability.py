@@ -262,13 +262,13 @@ def render() -> None:
                             try:
                                 img = render_page_to_image(doc_path, page_no)
                                 st.image(img, caption=f"{doc_name} — Page {page_no}",
-                                         use_container_width=True)
+                                         use_column_width=True)
                             except Exception:
                                 st.caption("Page preview unavailable.")
                     elif doc_path.exists() and doc_path.suffix.lower() in {".png", ".jpg"}:
                         with st.expander(f"View source image ({doc_name})", expanded=False):
                             st.image(str(doc_path), caption=doc_name,
-                                     use_container_width=True)
+                                     use_column_width=True)
 
     st.divider()
 
