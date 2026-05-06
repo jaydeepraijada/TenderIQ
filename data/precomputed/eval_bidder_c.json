@@ -1,0 +1,107 @@
+[
+  {
+    "verdict_id": "V-fbea0467",
+    "bidder_id": "bidder_c",
+    "criterion_id": "C1",
+    "verdict": "needs_review",
+    "extracted_value": "INR 5.4 Cr (from scan)",
+    "normalized_value": 54000000,
+    "source": {
+      "doc_name": "turnover_certificate_scan.png",
+      "page": 1,
+      "snippet": "average annual turnover INR 5,40,00,000",
+      "source_type": "tesseract"
+    },
+    "llm_confidence": 0.55,
+    "ocr_confidence": 0.58,
+    "combined_confidence": 0.58,
+    "reason": "Turnover certificate submitted as a low-quality scan (Tesseract confidence ~58%). Value of INR 5.4 Cr is close to the threshold. Human review required to confirm authenticity and accuracy.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-baa224b9",
+    "bidder_id": "bidder_c",
+    "criterion_id": "C2",
+    "verdict": "eligible",
+    "extracted_value": "3 projects completed (borderline)",
+    "normalized_value": 3,
+    "source": {
+      "doc_name": "project_experience.pdf",
+      "page": 1,
+      "snippet": "3 completed construction projects listed: INR 1.2 Cr, 1.5 Cr, 2.1 Cr",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.87,
+    "ocr_confidence": null,
+    "combined_confidence": 0.87,
+    "reason": "Bidder has exactly 3 completed similar projects, meeting the minimum threshold.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-f1c8ec3e",
+    "bidder_id": "bidder_c",
+    "criterion_id": "C3",
+    "verdict": "eligible",
+    "extracted_value": "GSTIN: 24AABCC9012H1Z1",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "gst_certificate.pdf",
+      "page": 1,
+      "snippet": "GSTIN: 24AABCC9012H1Z1, Status: ACTIVE",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.97,
+    "ocr_confidence": null,
+    "combined_confidence": 0.97,
+    "reason": "Valid GST registration certificate with active status.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-6eafeb5a",
+    "bidder_id": "bidder_c",
+    "criterion_id": "C4",
+    "verdict": "eligible",
+    "extracted_value": "ISO-2023-9001-SCS, valid 10-09-2027",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "iso_9001.pdf",
+      "page": 1,
+      "snippet": "ISO 9001:2015 Certificate No: ISO-2023-9001-SCS, Valid Through: 10-09-2027",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.96,
+    "ocr_confidence": null,
+    "combined_confidence": 0.96,
+    "reason": "Valid ISO 9001:2015 certificate, valid through September 2027.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-5843c2c4",
+    "bidder_id": "bidder_c",
+    "criterion_id": "C5",
+    "verdict": "not_eligible",
+    "extracted_value": "No paramilitary experience documented",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "project_experience.pdf",
+      "page": 1,
+      "snippet": "projects are GIDC/Municipal Corporation/NHAI \u2014 no defence",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.82,
+    "ocr_confidence": null,
+    "combined_confidence": 0.82,
+    "reason": "No prior experience with paramilitary or defence infrastructure found.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  }
+]

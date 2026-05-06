@@ -1,0 +1,117 @@
+{
+  "criteria": [
+    {
+      "id": "C1",
+      "title": "Minimum Annual Turnover",
+      "category": "financial",
+      "mandatory": true,
+      "description": "The bidder shall have a minimum average annual turnover of INR 5 Crore during the last three financial years (2022-23, 2023-24, 2024-25).",
+      "rule": {
+        "type": "numeric_threshold",
+        "field": "annual_turnover_inr",
+        "operator": ">=",
+        "value": 50000000,
+        "unit": "INR"
+      },
+      "query_hints": [
+        "annual turnover",
+        "total revenue",
+        "INR crore",
+        "audited financials",
+        "CA certificate"
+      ],
+      "source_page": 2,
+      "source_clause": "3.2(a)"
+    },
+    {
+      "id": "C2",
+      "title": "Completed Construction Projects",
+      "category": "technical",
+      "mandatory": true,
+      "description": "The bidder must have successfully completed at least three (3) similar construction projects of value not less than INR 1 Crore each in the last five financial years.",
+      "rule": {
+        "type": "count_threshold",
+        "field": "completed_projects",
+        "operator": ">=",
+        "value": 3,
+        "unit": null
+      },
+      "query_hints": [
+        "completed projects",
+        "construction experience",
+        "work order",
+        "completion certificate",
+        "similar projects"
+      ],
+      "source_page": 2,
+      "source_clause": "3.2(b)"
+    },
+    {
+      "id": "C3",
+      "title": "GST Registration",
+      "category": "compliance",
+      "mandatory": true,
+      "description": "The bidder shall possess a valid Goods and Services Tax (GST) registration certificate. The GSTIN must be active as on the date of submission.",
+      "rule": {
+        "type": "certification_present",
+        "field": "gstin",
+        "operator": "exists",
+        "value": null,
+        "unit": null
+      },
+      "query_hints": [
+        "GSTIN",
+        "GST certificate",
+        "GST registration",
+        "tax registration"
+      ],
+      "source_page": 2,
+      "source_clause": "3.2(c)"
+    },
+    {
+      "id": "C4",
+      "title": "ISO 9001:2015 Certification",
+      "category": "compliance",
+      "mandatory": true,
+      "description": "The bidder shall hold a valid ISO 9001:2015 Quality Management System certification issued by an accredited certification body.",
+      "rule": {
+        "type": "certification_present",
+        "field": "iso_9001",
+        "operator": "exists",
+        "value": null,
+        "unit": null
+      },
+      "query_hints": [
+        "ISO 9001",
+        "quality management",
+        "ISO certificate",
+        "QMS certification"
+      ],
+      "source_page": 2,
+      "source_clause": "3.2(d)"
+    },
+    {
+      "id": "C5",
+      "title": "Paramilitary Infrastructure Experience",
+      "category": "technical",
+      "mandatory": false,
+      "description": "Preferably, the bidder may have prior experience with construction or maintenance of paramilitary or defence infrastructure.",
+      "rule": {
+        "type": "document_present",
+        "field": "paramilitary_experience",
+        "operator": "exists",
+        "value": null,
+        "unit": null
+      },
+      "query_hints": [
+        "paramilitary",
+        "defence infrastructure",
+        "CRPF",
+        "BSF",
+        "security forces"
+      ],
+      "source_page": 2,
+      "source_clause": "3.2(e)"
+    }
+  ]
+}

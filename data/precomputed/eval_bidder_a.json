@@ -1,0 +1,107 @@
+[
+  {
+    "verdict_id": "V-9e49234c",
+    "bidder_id": "bidder_a",
+    "criterion_id": "C1",
+    "verdict": "eligible",
+    "extracted_value": "INR 6.2 Cr (avg: 6.37 Cr)",
+    "normalized_value": 63666667,
+    "source": {
+      "doc_name": "audited_financials.pdf",
+      "page": 1,
+      "snippet": "annual turnover for FY 2023-24 was INR 6,20,00,000",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.93,
+    "ocr_confidence": null,
+    "combined_confidence": 0.93,
+    "reason": "Average annual turnover of INR 6.37 Cr exceeds the required threshold of INR 5 Cr.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.918702+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-9f84114a",
+    "bidder_id": "bidder_a",
+    "criterion_id": "C2",
+    "verdict": "eligible",
+    "extracted_value": "5 projects completed",
+    "normalized_value": 5,
+    "source": {
+      "doc_name": "project_experience.pdf",
+      "page": 1,
+      "snippet": "5 completed construction projects listed, each >= INR 1 Crore",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.95,
+    "ocr_confidence": null,
+    "combined_confidence": 0.95,
+    "reason": "Bidder has completed 5 similar construction projects in the last 5 years, exceeding the minimum of 3.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-46a017a4",
+    "bidder_id": "bidder_a",
+    "criterion_id": "C3",
+    "verdict": "eligible",
+    "extracted_value": "GSTIN: 27AABCA1234F1Z5",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "gst_certificate.pdf",
+      "page": 1,
+      "snippet": "GSTIN: 27AABCA1234F1Z5, Status: ACTIVE",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.98,
+    "ocr_confidence": null,
+    "combined_confidence": 0.98,
+    "reason": "Valid GST registration certificate present with active GSTIN status.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-9eb49fce",
+    "bidder_id": "bidder_a",
+    "criterion_id": "C4",
+    "verdict": "eligible",
+    "extracted_value": "ISO-2021-9001-APEX, valid 15-06-2027",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "iso_9001.pdf",
+      "page": 1,
+      "snippet": "ISO 9001:2015 Certificate No: ISO-2021-9001-APEX, Valid Through: 15-06-2027",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.97,
+    "ocr_confidence": null,
+    "combined_confidence": 0.97,
+    "reason": "Valid ISO 9001:2015 certificate present, valid through June 2027.",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  },
+  {
+    "verdict_id": "V-8f79d80a",
+    "bidder_id": "bidder_a",
+    "criterion_id": "C5",
+    "verdict": "eligible",
+    "extracted_value": "CRPF Camp Pune barracks project (2024)",
+    "normalized_value": null,
+    "source": {
+      "doc_name": "project_experience.pdf",
+      "page": 1,
+      "snippet": "Barracks Construction, CRPF Camp Pune, INR 3.5 Cr, 2024",
+      "source_type": "text_pdf"
+    },
+    "llm_confidence": 0.88,
+    "ocr_confidence": null,
+    "combined_confidence": 0.88,
+    "reason": "Bidder has prior experience with CRPF paramilitary infrastructure (barracks construction, 2024).",
+    "model_version": "deepseek-chat@2026-05-07",
+    "timestamp": "2026-05-06T19:17:36.919283+00:00",
+    "review_status": "pending"
+  }
+]
