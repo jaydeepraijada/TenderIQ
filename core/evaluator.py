@@ -60,7 +60,9 @@ def evaluate(bidder_id: str, criterion: Criterion) -> Verdict:
         )
         audit.log("criterion_evaluated", bidder_id=bidder_id,
                   criterion_id=criterion.id, verdict="needs_review",
-                  combined_confidence=0.0)
+                  llm_verdict="needs_review", extracted_value="",
+                  llm_confidence=0.0, combined_confidence=0.0,
+                  ocr_tier="", escalation_reason="no evidence found", reason=v.reason)
         return v
 
     evidence_dicts = [
@@ -148,9 +150,26 @@ Rules:
         timestamp=_now_iso(),
         review_status="pending",
     )
-    audit.log("criterion_evaluated", bidder_id=bidder_id,
-              criterion_id=criterion.id, verdict=final_verdict,
-              combined_confidence=round(combined, 4))
+    escalation_reason = None
+    if llm_verdict != final_verdict:
+        if combined < CONFIDENCE_REVIEW:
+            escalation_reason = f"auto-escalated: combined confidence {combined:.0%} below threshold"
+        elif combined < CONFIDENCE_HIGH and llm_verdict == "not_eligible":
+            escalation_reason = f"auto-escalated: borderline confidence {combined:.0%} on disqualification"
+
+    audit.log(
+        "criterion_evaluated",
+        bidder_id=bidder_id,
+        criterion_id=criterion.id,
+        verdict=final_verdict,
+        llm_verdict=llm_verdict,
+        extracted_value=extracted_value or "",
+        llm_confidence=round(llm_confidence, 4),
+        combined_confidence=round(combined, 4),
+        ocr_tier=source_type,
+        escalation_reason=escalation_reason or "",
+        reason=reason,
+    )
     return v
 
 

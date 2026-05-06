@@ -1,6 +1,7 @@
 import streamlit as st
 
 from core import audit
+from core.config import BIDDER_NAMES
 from core.fallback import load_criteria
 
 
@@ -30,23 +31,94 @@ def render() -> None:
 
     st.divider()
 
-    st.subheader("How it works")
+    # Architecture diagram
+    st.subheader("System Architecture")
+    st.markdown("""
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TenderIQ Pipeline                            │
+└─────────────────────────────────────────────────────────────────────┘
+
+  📄 Tender PDF                      📁 Bidder Documents
+       │                              (PDFs, scans, photos)
+       │                                      │
+       ▼                                      ▼
+ ┌───────────┐                    ┌────────────────────────┐
+ │  DeepSeek │                    │   3-Tier OCR Pipeline  │
+ │    LLM    │                    │  ① PyMuPDF  (typed)   │
+ │ (Stage 1) │                    │  ② Tesseract (scans)  │
+ └───────────┘                    │  ③ Vision LLM (poor)  │
+       │                          └────────────────────────┘
+       │                                      │
+       ▼                                      ▼
+ ┌───────────┐                    ┌────────────────────────┐
+ │ Criteria  │                    │   ChromaDB Vector      │
+ │  C1 – C5  │                    │   Index (per bidder)   │
+ │ (JSON)    │                    └────────────────────────┘
+ └───────────┘                                │
+       │                                      │  semantic search
+       └──────────────────┬───────────────────┘
+                          │
+                          ▼
+               ┌─────────────────────┐
+               │   DeepSeek LLM      │
+               │   (Stage 3 eval)    │
+               │                     │
+               │  evidence → verdict │
+               │  + confidence score │
+               └─────────────────────┘
+                          │
+            ┌─────────────┴──────────────┐
+            │                            │
+            ▼                            ▼
+   confidence ≥ 0.80            confidence < 0.80
+   verdict kept                 downgraded to
+                                needs_review
+                                      │
+                                      ▼
+                             ┌─────────────────┐
+                             │  Human Review   │
+                             │  Queue (Tab 4)  │
+                             └─────────────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────┐
+                             │   Audit Log     │
+                             │  (every action) │
+                             └─────────────────┘
+```
+""")
+
+    st.divider()
+
+    st.subheader("Pipeline Stages")
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("""
-**Stage 1 — Extract Criteria**
-DeepSeek LLM reads the tender PDF and extracts each eligibility criterion as structured JSON (category, rule, query hints).
+**① Extract Criteria**
+DeepSeek reads the full tender PDF and extracts each eligibility criterion as structured JSON —
+category, mandatory flag, rule (threshold / certification / count), source clause, and query hints
+for downstream retrieval.
 
-**Stage 2 — OCR & Index Bidder Docs**
-Three-tier OCR: PyMuPDF (typed PDF) → Tesseract → DeepSeek Vision LLM (low-confidence scans). All pages indexed into ChromaDB.
+**② OCR & Index Bidder Documents**
+Three-tier pipeline handles any document format:
+PyMuPDF for typed PDFs (instant, lossless) →
+Tesseract for scans (free, fast) →
+DeepSeek Vision LLM when Tesseract confidence < 65%.
+All text is chunked and indexed into ChromaDB with full provenance metadata.
 """)
     with col_b:
         st.markdown("""
-**Stage 3 — Evaluate per Criterion**
-Vector search retrieves relevant evidence chunks. DeepSeek evaluates eligible / not_eligible / needs_review with a combined confidence score.
+**③ Evaluate per Criterion**
+For each (bidder × criterion) pair: semantic search retrieves the most relevant evidence chunks,
+DeepSeek decides eligible / not_eligible / needs_review with a combined confidence score
+that weights LLM certainty against OCR quality.
+The safety rule: never silently disqualify — borderline cases always go to human review.
 
-**Stage 4 — Human Review & Audit**
-Low-confidence verdicts are routed to the review queue. Every action is logged with timestamp, model version, and payload.
+**④ Human Review & Audit**
+Flagged verdicts surface in the Review Queue with full evidence and source citations.
+Every action — extraction, indexing, evaluation, review — is logged to SQLite with
+timestamp, model version, actor, and payload.
 """)
 
     st.divider()
@@ -59,13 +131,13 @@ Low-confidence verdicts are routed to the review queue. Every action is logged w
             criteria = lc()
             st.session_state["criteria"] = [c.model_dump() for c in criteria]
             verdicts_dict: dict = {}
-            for bidder_id in ["bidder_a", "bidder_b", "bidder_c"]:
+            for bidder_id in BIDDER_NAMES:
                 verdicts_dict[bidder_id] = [
                     load_evaluation(bidder_id, c.id).model_dump()
                     for c in criteria
                 ]
             st.session_state["verdicts"] = verdicts_dict
-            st.success("Pre-computed demo data loaded. Navigate to the other tabs.")
+            st.success("Pre-computed demo loaded. Navigate to the other tabs.")
             st.rerun()
     with col2:
-        st.info("Or go to **Tender Analysis** tab to run the live LLM pipeline.")
+        st.info("Or go to **Tender Analysis** to run the live LLM pipeline.")

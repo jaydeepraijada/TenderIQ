@@ -33,6 +33,11 @@ def render() -> None:
         return
 
     st.markdown(f"**{len(pending_items)} item(s) pending review**")
+    st.caption(
+        "These verdicts require human confirmation before being finalised. "
+        "The certainty bar shows how confident the model is in its decision to flag the item — "
+        "not how likely the bidder meets the criterion."
+    )
     st.divider()
 
     for bidder_id, idx, v in pending_items:
@@ -52,7 +57,7 @@ def render() -> None:
                     st.markdown(f"Source snippet: _{v['source']['snippet']}_")
             with col2:
                 conf = v.get("combined_confidence", 0.0)
-                confidence_bar(conf, "Confidence")
+                confidence_bar(conf, "Certainty in assessment")
 
             btn_col1, btn_col2, btn_col3 = st.columns(3)
             key_prefix = f"review_{bidder_id}_{v['criterion_id']}"
@@ -66,6 +71,9 @@ def render() -> None:
                         bidder_id=bidder_id,
                         criterion_id=v["criterion_id"],
                         action_taken="approved",
+                        original_verdict=v["verdict"],
+                        original_extracted_value=v.get("extracted_value", ""),
+                        combined_confidence=v.get("combined_confidence", 0.0),
                     )
                     st.rerun()
 
@@ -82,7 +90,10 @@ def render() -> None:
                         bidder_id=bidder_id,
                         criterion_id=v["criterion_id"],
                         action_taken="edited",
+                        original_verdict=v["verdict"],
+                        original_extracted_value=v.get("extracted_value", ""),
                         edited_value=edit_val,
+                        combined_confidence=v.get("combined_confidence", 0.0),
                     )
                     st.rerun()
 
@@ -95,5 +106,8 @@ def render() -> None:
                         bidder_id=bidder_id,
                         criterion_id=v["criterion_id"],
                         action_taken="rejected",
+                        original_verdict=v["verdict"],
+                        original_extracted_value=v.get("extracted_value", ""),
+                        combined_confidence=v.get("combined_confidence", 0.0),
                     )
                     st.rerun()

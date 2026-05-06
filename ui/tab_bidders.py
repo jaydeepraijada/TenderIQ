@@ -1,17 +1,15 @@
-from pathlib import Path
-
 import streamlit as st
 
 from core import bidder_processor, evaluator
-from core.config import DATA_DIR
+from core.config import BIDDER_NAMES, DATA_DIR
 from core.fallback import load_criteria
 from core.schemas import Criterion
 from ui.components import category_badge, confidence_bar, ocr_tier_badge, verdict_pill
 
 _BIDDER_LABELS = {
-    "bidder_a": "Bidder A — Apex Constructions (Clearly Eligible)",
+    "bidder_a": "Bidder A — Apex Constructions Pvt. Ltd. (Clearly Eligible)",
     "bidder_b": "Bidder B — BuildRight Enterprises (Ineligible: Low Turnover)",
-    "bidder_c": "Bidder C — Shree Constructions (Scanned Cert: Needs Review)",
+    "bidder_c": "Bidder C — Shree Constructions & Services (Scanned Cert: Needs Review)",
 }
 
 
@@ -22,8 +20,12 @@ def _get_criteria() -> list[Criterion]:
     return load_criteria()
 
 
-def _overall_verdict(verdicts: list[dict]) -> str:
-    mandatory = [v for v in verdicts if True]  # all criteria checked
+def _overall_verdict(verdicts: list[dict], crit_map: dict) -> str:
+    """Only mandatory criteria determine overall eligibility."""
+    mandatory = [v for v in verdicts if crit_map.get(v["criterion_id"], None) and
+                 crit_map[v["criterion_id"]].mandatory]
+    if not mandatory:
+        mandatory = verdicts  # fallback if crit_map is missing
     if any(v["verdict"] == "not_eligible" for v in mandatory):
         return "not_eligible"
     if any(v["verdict"] == "needs_review" for v in mandatory):
@@ -52,14 +54,15 @@ def render() -> None:
                 f for f in (DATA_DIR / "bidders" / bidder_id).iterdir()
                 if f.suffix.lower() in {".pdf", ".png", ".jpg"}
             )
-            with st.spinner(f"Processing {bidder_id} documents…"):
+            with st.spinner(f"Processing {BIDDER_NAMES.get(bidder_id, bidder_id)} documents…"):
                 bidder_processor.process_bidder(bidder_id, files)
             verdicts_list = []
             for c in criteria:
                 v = evaluator.evaluate(bidder_id, c)
                 verdicts_list.append(v.model_dump())
                 done += 1
-                progress.progress(done / total, text=f"Evaluated {c.id} for {bidder_id}")
+                progress.progress(done / total,
+                                  text=f"Evaluated {c.id} for {BIDDER_NAMES.get(bidder_id, bidder_id)}")
             verdicts_dict[bidder_id] = verdicts_list
         st.session_state["verdicts"] = verdicts_dict
         progress.empty()
@@ -77,13 +80,34 @@ def render() -> None:
         if bidder_id not in verdicts_data:
             continue
         verdicts = verdicts_data[bidder_id]
-        overall = _overall_verdict(verdicts)
+        overall = _overall_verdict(verdicts, crit_map)
         overall_pill = verdict_pill(overall)
+        friendly = BIDDER_NAMES.get(bidder_id, bidder_id)
+        mandatory_count = sum(1 for v in verdicts
+                              if crit_map.get(v["criterion_id"]) and
+                              crit_map[v["criterion_id"]].mandatory)
+        passed = sum(1 for v in verdicts
+                     if v["verdict"] == "eligible" and
+                     crit_map.get(v["criterion_id"]) and
+                     crit_map[v["criterion_id"]].mandatory)
 
-        with st.expander(
-            f"**{_BIDDER_LABELS.get(bidder_id, bidder_id)}**  —  Overall: {overall_pill}",
-            expanded=True,
-        ):
+        with st.container(border=True):
+            st.markdown(
+                f"#### {friendly}  —  Overall: {overall_pill}"
+                f"  <span style='font-size:0.85em; color:grey;'>"
+                f"({passed}/{mandatory_count} mandatory criteria met)</span>",
+                unsafe_allow_html=True,
+            )
+
+            # Column headers
+            hcols = st.columns([3, 2, 2, 2, 1])
+            hcols[0].caption("Criterion")
+            hcols[1].caption("Verdict")
+            hcols[2].caption("Extracted Value")
+            hcols[3].caption("Source / OCR Tier")
+            hcols[4].caption("Category")
+            st.divider()
+
             for v in verdicts:
                 crit = crit_map.get(v["criterion_id"])
                 crit_title = crit.title if crit else v["criterion_id"]
@@ -105,7 +129,7 @@ def render() -> None:
                 conf = v.get("combined_confidence", 0.0)
                 confidence_bar(conf)
 
-                if v.get("reason") or v.get("source"):
+                if v.get("reason") or (v.get("source") and v["source"].get("snippet")):
                     with st.expander("Details", expanded=False):
                         if v.get("reason"):
                             st.markdown(f"**Reason:** {v['reason']}")

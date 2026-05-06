@@ -19,3 +19,9 @@ CHROMA_DIR = str(BASE_DIR / ".chroma")
 AUDIT_DB = str(BASE_DIR / "audit.db")
 PRECOMPUTED_DIR = DATA_DIR / "precomputed"
 OCR_CACHE_DIR = BASE_DIR / ".ocr_cache"
+
+BIDDER_NAMES = {
+    "bidder_a": "Apex Constructions Pvt. Ltd.",
+    "bidder_b": "BuildRight Enterprises",
+    "bidder_c": "Shree Constructions & Services",
+}

@@ -47,6 +47,14 @@ def log(action: str, actor: str = "system", **fields) -> int:
     return row_id
 
 
+def clear() -> None:
+    conn = _conn()
+    conn.execute("DELETE FROM audit_log")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='audit_log'")
+    conn.commit()
+    conn.close()
+
+
 def query(filters: dict | None = None) -> list[dict]:
     conn = _conn()
     sql = "SELECT * FROM audit_log"
