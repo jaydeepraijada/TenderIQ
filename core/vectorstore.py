@@ -1,16 +1,53 @@
+import hashlib
+
+import streamlit as st
+
+from core.config import CHROMA_DIR
+
+
+@st.cache_resource
 def get_client():
-    raise NotImplementedError
+    import chromadb
+    return chromadb.PersistentClient(path=CHROMA_DIR)
 
 
 def get_collection(name: str):
-    raise NotImplementedError
+    client = get_client()
+    return client.get_or_create_collection(
+        name=name,
+        metadata={"hnsw:space": "cosine"},
+    )
 
 
 def add_chunks(collection, chunks: list[dict], metadatas: list[dict]) -> None:
-    raise NotImplementedError
+    if not chunks:
+        return
+    ids = [
+        hashlib.sha256(c["text"].encode()).hexdigest()[:16]
+        for c in chunks
+    ]
+    collection.upsert(
+        documents=[c["text"] for c in chunks],
+        ids=ids,
+        metadatas=metadatas,
+    )
 
 
 def query(
     collection, text: str, k: int = 4, where: dict | None = None
 ) -> list[dict]:
-    raise NotImplementedError
+    count = collection.count()
+    if count == 0:
+        return []
+    n = min(k, count)
+    kwargs: dict = {"query_texts": [text], "n_results": n}
+    if where:
+        kwargs["where"] = where
+    results = collection.query(**kwargs)
+    docs = results["documents"][0]
+    metas = results["metadatas"][0]
+    dists = results["distances"][0]
+    return [
+        {"text": doc, "metadata": meta, "distance": dist}
+        for doc, meta, dist in zip(docs, metas, dists)
+    ]
