@@ -12,13 +12,42 @@ st.set_page_config(
     layout="wide",
 )
 
+
+def _probe_llm() -> str:
+    """Returns 'green', 'amber', or 'red'."""
+    if st.session_state.get("fallback_active"):
+        return "amber"
+    if "llm_status" in st.session_state:
+        return st.session_state["llm_status"]
+    from core.llm_client import LLM, LLMUnavailable
+    try:
+        LLM().chat_json("Respond with valid JSON only.", '{"ping": true}')
+        st.session_state["llm_status"] = "green"
+        return "green"
+    except LLMUnavailable:
+        st.session_state["llm_status"] = "red"
+        return "red"
+    except Exception:
+        st.session_state["llm_status"] = "red"
+        return "red"
+
+
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ⚖️ TenderIQ")
     st.caption("Explainable AI for Tender Evaluation")
     st.divider()
-    # Connection status — placeholder until core/llm_client.py is wired
-    st.markdown("🔴 **DeepSeek:** not connected")
+
+    status = _probe_llm()
+    if status == "green":
+        st.markdown("🟢 **DeepSeek:** connected")
+    elif status == "amber":
+        st.markdown("🟡 **DeepSeek:** pre-computed mode")
+        st.warning("⚠ Pre-computed results active.")
+    else:
+        st.markdown("🔴 **DeepSeek:** not connected")
+        st.caption("Using pre-computed fallback data.")
+
     st.divider()
     if st.button("Reset Session", use_container_width=True):
         for key in list(st.session_state.keys()):
