@@ -3,95 +3,96 @@ import streamlit as st
 from core import audit
 from core.config import BIDDER_NAMES
 from core.fallback import load_criteria
+from ui.components import stat_card
 
 
 def render() -> None:
-    # Hero banner
+    # Hero
     st.markdown(
-        """<div class="tiq-hero">
-        <h1>⚖️ TenderIQ</h1>
-        <p>Explainable AI for Government Tender Evaluation &nbsp;·&nbsp;
-           CRPF Hackathon Theme 3</p>
-        <p style="font-size:0.88rem;margin-top:8px;color:#94A3B8;">
-        Automated eligibility evaluation with criterion-level explainability,
-        three-tier OCR for scanned documents, and a complete audit trail.</p>
+        """<div style="background:linear-gradient(135deg,#0D1B2A 0%,#1E3A5F 60%,#2563EB 100%);
+                       border-radius:16px;padding:2.5rem 2.5rem 2rem;margin-bottom:1.5rem;">
+          <div style="font-size:0.75rem;font-weight:700;color:#93C5FD;
+                      text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">
+            CRPF Hackathon · Theme 3</div>
+          <h1 style="margin:0;font-size:2.2rem;font-weight:800;color:#FFFFFF;
+                     font-family:Inter,sans-serif;letter-spacing:-0.02em;line-height:1.2;">
+            ⚖️ TenderIQ</h1>
+          <p style="margin:10px 0 0;font-size:1rem;color:#CBD5E1;max-width:600px;
+                    line-height:1.6;font-weight:400;">
+            Explainable AI for Government Tender Evaluation. Automated eligibility
+            assessment with criterion-level evidence, three-tier OCR, and a complete
+            compliance audit trail.</p>
         </div>""",
         unsafe_allow_html=True,
     )
 
-    # KPI strip
+    # KPIs
     criteria_count = len(st.session_state.get("criteria", load_criteria()))
-    verdicts = st.session_state.get("verdicts", {})
-    bidders_evaluated = len(verdicts)
-    mandatory_checked = sum(
-        1 for bv in verdicts.values() for v in bv
-        if v.get("verdict") in ("eligible", "not_eligible", "needs_review")
-    )
-    audit_entries = len(audit.query())
+    verdicts       = st.session_state.get("verdicts", {})
+    checked        = sum(1 for bv in verdicts.values() for _ in bv)
+    audit_count    = len(audit.query())
 
     c1, c2, c3, c4 = st.columns(4)
-    for col, val, lbl in [
-        (c1, criteria_count,    "Criteria Extracted"),
-        (c2, bidders_evaluated, "Bidders Evaluated"),
-        (c3, mandatory_checked, "Criteria Checked"),
-        (c4, audit_entries,     "Audit Entries"),
-    ]:
-        col.markdown(
-            f'<div class="tiq-kpi">'
-            f'<div class="tiq-kpi-val">{val}</div>'
-            f'<div class="tiq-kpi-lbl">{lbl}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    with c1: stat_card(criteria_count,    "Criteria Extracted", "#2563EB")
+    with c2: stat_card(len(verdicts),     "Bidders Evaluated",  "#059669")
+    with c3: stat_card(checked,           "Criteria Checked",   "#7C3AED")
+    with c4: stat_card(audit_count,       "Audit Entries",      "#D97706")
 
     st.divider()
 
-    # Architecture
-    st.markdown('<div class="tiq-section-header"><div style="font-size:1.1rem;font-weight:700;color:#0D1B2A;">Pipeline Architecture</div></div>', unsafe_allow_html=True)
+    # Pipeline stages
+    st.markdown(
+        '<h3 style="margin:0 0 1rem;font-size:1.1rem;font-weight:700;color:#0D1B2A;'
+        'font-family:Inter,sans-serif;">How it works</h3>',
+        unsafe_allow_html=True,
+    )
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.markdown("""
-<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
-<div style="font-weight:700;color:#1E3A5F;margin-bottom:12px;">📥 Ingestion</div>
+    stages = [
+        ("#2563EB", "#EFF6FF", "#BFDBFE", "1", "Extract Criteria",
+         "DeepSeek reads the tender PDF and returns structured JSON for each criterion — "
+         "category, mandatory flag, rule (threshold / count / certificate), source clause, "
+         "and query hints for downstream retrieval."),
+        ("#7C3AED", "#F5F3FF", "#DDD6FE", "2", "Three-Tier OCR",
+         "📄 PyMuPDF for typed PDFs · 🔍 Tesseract for scans · 👁 DeepSeek Vision LLM "
+         "when Tesseract confidence < 65%. Every page records its tier and confidence score. "
+         "Results cached to avoid re-processing."),
+        ("#059669", "#F0FDF4", "#BBF7D0", "3", "Evaluate per Criterion",
+         "Semantic search retrieves the top-k relevant chunks from ChromaDB. DeepSeek "
+         "produces a verdict with combined confidence. Safety rule: borderline "
+         "not-eligible is downgraded to needs-review — never silent disqualification."),
+        ("#D97706", "#FFFBEB", "#FDE68A", "4", "Human Review & Audit",
+         "Flagged verdicts surface in the review queue with full evidence and source "
+         "citations. Every action — extraction, OCR, evaluation, officer decision — is "
+         "logged to SQLite with timestamp, model version, and payload."),
+    ]
 
-<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
-<div style="background:#DBEAFE;color:#1E40AF;border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:700;flex-shrink:0;">1</div>
-<div><strong>Extract Criteria</strong><br><span style="font-size:0.82rem;color:#64748B;">DeepSeek LLM reads the full tender PDF and returns structured JSON — category, mandatory flag, rule, source clause, query hints.</span></div>
-</div>
-
-<div style="display:flex;align-items:flex-start;gap:10px;">
-<div style="background:#DBEAFE;color:#1E40AF;border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:700;flex-shrink:0;">2</div>
-<div><strong>Three-Tier OCR</strong><br><span style="font-size:0.82rem;color:#64748B;">
-📄 PyMuPDF → 🔍 Tesseract → 👁 Vision LLM.<br>
-Each page records its tier and confidence score.
-Chunks indexed into ChromaDB with full provenance.</span></div>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
-    with col_b:
-        st.markdown("""
-<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
-<div style="font-weight:700;color:#1E3A5F;margin-bottom:12px;">⚖️ Evaluation & Oversight</div>
-
-<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
-<div style="background:#DCFCE7;color:#166534;border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:700;flex-shrink:0;">3</div>
-<div><strong>Evaluate per Criterion</strong><br><span style="font-size:0.82rem;color:#64748B;">Semantic search retrieves top-k evidence chunks. DeepSeek returns verdict + confidence. Safety rule: borderline "not eligible" is downgraded to "needs review" — never silent disqualification.</span></div>
-</div>
-
-<div style="display:flex;align-items:flex-start;gap:10px;">
-<div style="background:#FEF3C7;color:#92400E;border-radius:6px;padding:3px 8px;font-size:0.75rem;font-weight:700;flex-shrink:0;">4</div>
-<div><strong>Human Review & Audit</strong><br><span style="font-size:0.82rem;color:#64748B;">Flagged verdicts surface with full evidence. Every action — extraction, OCR, evaluation, review — is logged to SQLite with timestamp, model version, and payload.</span></div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+    cols = st.columns(4)
+    for col, (accent, bg, border, num, title, body) in zip(cols, stages):
+        with col:
+            st.markdown(
+                f"""<div style="background:{bg};border:1px solid {border};border-radius:12px;
+                                padding:18px 16px;height:100%;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <div style="background:{accent};color:#fff;border-radius:50%;
+                                width:24px;height:24px;display:flex;align-items:center;
+                                justify-content:center;font-size:0.75rem;font-weight:700;
+                                flex-shrink:0;">{num}</div>
+                    <span style="font-weight:700;font-size:0.9rem;color:#0D1B2A;
+                                 font-family:Inter,sans-serif;">{title}</span>
+                  </div>
+                  <p style="margin:0;font-size:0.82rem;color:#374151;line-height:1.6;">{body}</p>
+                </div>""",
+                unsafe_allow_html=True,
+            )
 
     st.divider()
 
     # Quick start
-    st.markdown('<div class="tiq-section-header"><div style="font-size:1.1rem;font-weight:700;color:#0D1B2A;">Quick Start</div></div>', unsafe_allow_html=True)
-
+    st.markdown(
+        '<h3 style="margin:0 0 1rem;font-size:1.1rem;font-weight:700;color:#0D1B2A;'
+        'font-family:Inter,sans-serif;">Quick Start</h3>',
+        unsafe_allow_html=True,
+    )
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
@@ -101,16 +102,14 @@ Chunks indexed into ChromaDB with full provenance.</span></div>
                 from core.fallback import load_criteria as lc, load_evaluation
                 criteria = lc()
                 st.session_state["criteria"] = [c.model_dump() for c in criteria]
-                verdicts_dict: dict = {}
-                for bidder_id in BIDDER_NAMES:
-                    verdicts_dict[bidder_id] = [
-                        load_evaluation(bidder_id, c.id).model_dump() for c in criteria
-                    ]
-                st.session_state["verdicts"] = verdicts_dict
-                st.success("Loaded. Navigate to Bidder Evaluation or Interpretability.")
+                vd: dict = {}
+                for bid in BIDDER_NAMES:
+                    vd[bid] = [load_evaluation(bid, c.id).model_dump() for c in criteria]
+                st.session_state["verdicts"] = vd
+                st.success("Loaded — navigate to Bidder Evaluation or Interpretability.")
                 st.rerun()
     with col2:
         with st.container(border=True):
             st.markdown("**⚡ Live Pipeline**")
-            st.caption("Upload a tender PDF, run extraction and evaluation against the DeepSeek API.")
-            st.info("Set `DEEPSEEK_API_KEY` in `.env`, then use the Tender Analysis tab.")
+            st.caption("Set DEEPSEEK_API_KEY in .env, then use the Tender Analysis tab.")
+            st.info("Sidebar shows 🟢 when the API is reachable.")
