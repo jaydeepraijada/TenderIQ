@@ -116,7 +116,7 @@ Rules:
     llm_confidence = float(result.get("llm_confidence", 0.5))
     reason = result.get("reason", "")
 
-    source_type = chosen_src.get("source_type", "text_pdf")
+    source_type = chosen_src.get("source_type") or "text_pdf"
     best_evidence = next(
         (e for e in evidence if e.doc_name == chosen_src.get("doc_name")),
         evidence[0] if evidence else None,
