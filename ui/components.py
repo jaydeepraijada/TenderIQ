@@ -1,105 +1,82 @@
 import streamlit as st
 
-# ── Inline-style badge helpers ────────────────────────────────────────────────
-# Every function returns an HTML string with 100% inline styles.
-# No CSS classes — reliable across all Streamlit markdown containers.
+# Inline-style helpers — all colors use either Streamlit CSS vars or
+# semi-transparent rgba so they render correctly in both light and dark mode.
 
 _BADGE = (
     'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;'
     'border-radius:20px;font-size:0.78rem;font-weight:600;'
-    'white-space:nowrap;font-family:Inter,sans-serif;line-height:1.4;'
+    'white-space:nowrap;line-height:1.4;'
 )
 
 
 def verdict_pill(verdict: str) -> str:
     cfg = {
-        "eligible":     ("#D1FAE5", "#065F46", "#6EE7B7", "✅ Eligible"),
-        "not_eligible": ("#FEE2E2", "#991B1B", "#FCA5A5", "❌ Not Eligible"),
-        "needs_review": ("#FEF3C7", "#92400E", "#FCD34D", "⚠️ Needs Review"),
+        "eligible":     ("rgba(34,197,94,0.15)",   "#22C55E", "✅ Eligible"),
+        "not_eligible": ("rgba(239,68,68,0.15)",    "#EF4444", "❌ Not Eligible"),
+        "needs_review": ("rgba(245,158,11,0.15)",   "#F59E0B", "⚠️ Needs Review"),
     }
-    bg, fg, border, label = cfg.get(verdict, ("#F1F5F9", "#374151", "#CBD5E1", verdict))
+    bg, fg, label = cfg.get(verdict, ("rgba(128,128,128,0.1)", "var(--text-color)", verdict))
     return (f'<span style="{_BADGE}background:{bg};color:{fg};'
-            f'border:1px solid {border};">{label}</span>')
+            f'border:1px solid {fg}33;">{label}</span>')
 
 
 def category_badge(category: str) -> str:
     cfg = {
-        "financial":  ("#DBEAFE", "#1E40AF", "#93C5FD", "💰 Financial"),
-        "technical":  ("#DCFCE7", "#166534", "#86EFAC", "🔧 Technical"),
-        "compliance": ("#FEF3C7", "#92400E", "#FCD34D", "📋 Compliance"),
+        "financial":  ("rgba(37,99,235,0.12)",  "#3B82F6", "💰 Financial"),
+        "technical":  ("rgba(34,197,94,0.12)",  "#22C55E", "🔧 Technical"),
+        "compliance": ("rgba(245,158,11,0.12)", "#F59E0B", "📋 Compliance"),
     }
-    bg, fg, border, label = cfg.get(category, ("#F1F5F9", "#374151", "#CBD5E1", category))
+    bg, fg, label = cfg.get(category, ("rgba(128,128,128,0.1)", "var(--text-color)", category))
     return (f'<span style="{_BADGE}background:{bg};color:{fg};'
-            f'border:1px solid {border};">{label}</span>')
+            f'border:1px solid {fg}33;">{label}</span>')
 
 
 def ocr_tier_badge(source_type: str) -> str:
     cfg = {
-        "text_pdf":   ("#F1F5F9", "#475569", "#CBD5E1", "📄 Typed PDF"),
-        "tesseract":  ("#F5F3FF", "#6D28D9", "#DDD6FE", "🔍 Tesseract"),
-        "vision_llm": ("#FFF7ED", "#C2410C", "#FED7AA", "👁 Vision LLM"),
+        "text_pdf":   ("rgba(100,116,139,0.12)", "#94A3B8", "📄 Typed PDF"),
+        "tesseract":  ("rgba(124,58,237,0.12)",  "#8B5CF6", "🔍 Tesseract"),
+        "vision_llm": ("rgba(234,88,12,0.12)",   "#F97316", "👁 Vision LLM"),
     }
-    bg, fg, border, label = cfg.get(source_type, ("#F1F5F9", "#374151", "#CBD5E1", source_type))
+    bg, fg, label = cfg.get(source_type, ("rgba(128,128,128,0.1)", "var(--text-color)", source_type))
     return (f'<span style="{_BADGE}background:{bg};color:{fg};'
-            f'border:1px solid {border};">{label}</span>')
+            f'border:1px solid {fg}33;">{label}</span>')
 
 
 def mandatory_badge(mandatory: bool) -> str:
     if mandatory:
-        return (f'<span style="{_BADGE}background:#FEE2E2;color:#991B1B;'
-                f'border:1px solid #FCA5A5;">🔴 Mandatory</span>')
-    return (f'<span style="{_BADGE}background:#FFFBEB;color:#92400E;'
-            f'border:1px solid #FDE68A;">🟡 Optional</span>')
+        return (f'<span style="{_BADGE}background:rgba(239,68,68,0.12);color:#EF4444;'
+                f'border:1px solid #EF444433;">🔴 Mandatory</span>')
+    return (f'<span style="{_BADGE}background:rgba(245,158,11,0.12);color:#F59E0B;'
+            f'border:1px solid #F59E0B33;">🟡 Optional</span>')
 
 
 def confidence_bar(value: float, label: str = "Confidence") -> None:
     pct = min(max(value, 0.0), 1.0)
-    if pct >= 0.80:
-        bar_color, text_color = "#22C55E", "#166534"
-    elif pct >= 0.55:
-        bar_color, text_color = "#F59E0B", "#92400E"
-    else:
-        bar_color, text_color = "#EF4444", "#991B1B"
-
+    color = "#22C55E" if pct >= 0.80 else "#F59E0B" if pct >= 0.55 else "#EF4444"
     st.markdown(
         f"""<div style="margin:6px 0 10px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;
-              margin-bottom:4px;">
-    <span style="font-size:0.72rem;font-weight:600;color:#94A3B8;
-                 text-transform:uppercase;letter-spacing:0.05em;">{label}</span>
-    <span style="font-size:0.8rem;font-weight:700;color:{text_color};">{pct:.0%}</span>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <span style="font-size:0.72rem;font-weight:600;color:var(--text-color);
+                 opacity:0.5;text-transform:uppercase;letter-spacing:0.05em;">{label}</span>
+    <span style="font-size:0.8rem;font-weight:700;color:{color};">{pct:.0%}</span>
   </div>
-  <div style="background:#F1F5F9;border-radius:6px;height:6px;overflow:hidden;">
-    <div style="width:{pct*100:.1f}%;background:{bar_color};
-                height:100%;border-radius:6px;transition:width 0.3s ease;"></div>
+  <div style="background:rgba(128,128,128,0.15);border-radius:6px;height:6px;overflow:hidden;">
+    <div style="width:{pct*100:.1f}%;background:{color};height:100%;border-radius:6px;"></div>
   </div>
 </div>""",
         unsafe_allow_html=True,
     )
 
 
-def stat_card(value: str | int, label: str, color: str = "#2563EB") -> None:
+def stat_card(value: str | int, label: str, color: str = "#3B82F6") -> None:
     st.markdown(
-        f"""<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;
-                        padding:20px 18px;text-align:center;
-                        box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-  <div style="font-size:2rem;font-weight:800;color:{color};
-              font-family:Inter,sans-serif;line-height:1.1;">{value}</div>
-  <div style="font-size:0.7rem;font-weight:700;color:#94A3B8;margin-top:5px;
-              text-transform:uppercase;letter-spacing:0.08em;">{label}</div>
-</div>""",
-        unsafe_allow_html=True,
-    )
-
-
-def page_header(title: str, subtitle: str = "") -> None:
-    sub_html = (f'<p style="margin:6px 0 0;font-size:0.95rem;color:#64748B;'
-                f'font-weight:400;">{subtitle}</p>') if subtitle else ""
-    st.markdown(
-        f"""<div style="margin-bottom:1.5rem;">
-  <h1 style="margin:0;font-size:1.7rem;font-weight:800;color:#0D1B2A;
-             font-family:Inter,sans-serif;letter-spacing:-0.02em;">{title}</h1>
-  {sub_html}
+        f"""<div style="background:var(--secondary-background-color);
+                        border:1px solid rgba(128,128,128,0.2);border-radius:12px;
+                        padding:20px 18px;text-align:center;">
+  <div style="font-size:2rem;font-weight:800;color:{color};line-height:1.1;">{value}</div>
+  <div style="font-size:0.7rem;font-weight:700;color:var(--text-color);opacity:0.45;
+              margin-top:5px;text-transform:uppercase;letter-spacing:0.08em;">{label}</div>
 </div>""",
         unsafe_allow_html=True,
     )

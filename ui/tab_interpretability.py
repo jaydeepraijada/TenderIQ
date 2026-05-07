@@ -7,17 +7,17 @@ from core.pdf_utils import render_page_to_image
 from core.schemas import Criterion
 from ui.components import confidence_bar, verdict_pill
 
-_VERDICT_STYLE = {
-    "eligible":     ("#F0FDF4", "#166534", "#22C55E", "✅ PASSED"),
-    "not_eligible": ("#FEF2F2", "#991B1B", "#EF4444", "❌ FAILED"),
-    "needs_review": ("#FFFBEB", "#92400E", "#F59E0B", "⚠️ NEEDS REVIEW"),
+_VERDICT_CFG = {
+    "eligible":     ("rgba(34,197,94,0.12)",  "#22C55E", "✅ PASSED"),
+    "not_eligible": ("rgba(239,68,68,0.12)",   "#EF4444", "❌ FAILED"),
+    "needs_review": ("rgba(245,158,11,0.12)",  "#F59E0B", "⚠️ NEEDS REVIEW"),
 }
 
 _RULE_PLAIN = {
-    "numeric_threshold":   lambda r: f"must be {r['operator']} {r['value']:,} {r.get('unit') or ''}".strip(),
-    "count_threshold":     lambda r: f"must have completed at least {int(r['value'])}",
+    "numeric_threshold":    lambda r: f"must be {r['operator']} {r['value']:,} {r.get('unit') or ''}".strip(),
+    "count_threshold":      lambda r: f"must have completed at least {int(r['value'])}",
     "certification_present": lambda _: "valid certificate must be present",
-    "document_present":    lambda _: "supporting document must be present",
+    "document_present":     lambda _: "supporting document must be present",
 }
 
 
@@ -27,22 +27,20 @@ def _get_criteria() -> list[Criterion]:
 
 
 def _explain(v: dict, crit: Criterion | None) -> str:
-    verdict = v.get("verdict", "")
+    verdict   = v.get("verdict", "")
     extracted = v.get("extracted_value", "") or ""
-    reason = v.get("reason", "") or ""
+    reason    = v.get("reason", "") or ""
     if not crit:
         return reason
     rule = crit.rule
     rule_desc = _RULE_PLAIN.get(rule.type, lambda _: "")(rule.model_dump())
     if verdict == "eligible":
-        val = f" Found **{extracted}**." if extracted else ""
-        return f"{val} {reason}".strip()
+        return (f"Found **{extracted}**. " if extracted else "") + reason
     elif verdict == "not_eligible":
-        val = f" Found **{extracted}** (requirement: {rule_desc})." if extracted else f" Requirement: {rule_desc}."
-        return f"{val} {reason}".strip()
+        return ((f"Found **{extracted}** — does not meet requirement ({rule_desc}). "
+                 if extracted else f"Requirement: {rule_desc}. ") + reason)
     else:
-        val = f" Extracted value: **{extracted}**." if extracted else ""
-        return f"{val} {reason}".strip()
+        return (f"Extracted value: **{extracted}**. " if extracted else "") + reason
 
 
 def _qa_context(bid: str, verdicts: list[dict], criteria: list[Criterion]) -> str:
@@ -64,7 +62,7 @@ def _qa_context(bid: str, verdicts: list[dict], criteria: list[Criterion]) -> st
             lines.append(f"  Evidence: {s.get('doc_name')} page {s.get('page')} "
                          f"[{s.get('source_type')}]")
             if s.get("snippet"):
-                lines.append(f"  Snippet: \"{s['snippet'][:200]}\"")
+                lines.append(f'  Snippet: "{s["snippet"][:200]}"')
         lines.append("")
     return "\n".join(lines)
 
@@ -95,21 +93,20 @@ def _rule_answer(q: str, context: str) -> str:
     if any(w in q for w in ["turnover", "financial", "c1", "revenue"]):
         rel = [l.strip() for l in lines if "C1" in l or "turnover" in l.lower() or "Extracted" in l]
         return " ".join(rel[:4]) if rel else "Turnover information not found."
-    return ("Live LLM is unavailable. The evaluation summary above contains the full details.")
+    return "Live LLM is unavailable. The evaluation summary above contains the full details."
 
 
 def render() -> None:
     st.markdown(
-        '<h2 style="font-family:Inter,sans-serif;font-weight:800;font-size:1.5rem;'
-        'color:#0D1B2A;margin-bottom:4px;">Interpretability</h2>'
-        '<p style="color:#64748B;font-size:0.875rem;margin-bottom:1rem;">'
+        '<h2 style="font-weight:800;font-size:1.5rem;color:var(--text-color);">Interpretability</h2>'
+        '<p style="color:var(--text-color);opacity:0.6;font-size:0.875rem;margin-bottom:1rem;">'
         'Plain-English explanations with source citations. Ask any question about the evaluation.</p>',
         unsafe_allow_html=True,
     )
 
     vdata = st.session_state.get("verdicts", {})
     if not vdata:
-        st.info("No results yet. Load the pre-computed demo from the Overview tab, or run evaluation.")
+        st.info("No results yet. Load the pre-computed demo from Overview, or run evaluation.")
         return
 
     criteria = _get_criteria()
@@ -123,99 +120,93 @@ def render() -> None:
         return
 
     company = BIDDER_NAMES.get(bid, bid)
-
-    # Overall verdict banner
     mand = [v for v in verdicts if crit_map.get(v["criterion_id"]) and
             crit_map[v["criterion_id"]].mandatory]
-    failed  = [v for v in mand if v["verdict"] == "not_eligible"]
-    review  = [v for v in mand if v["verdict"] == "needs_review"]
-    passed  = [v for v in mand if v["verdict"] == "eligible"]
+    failed = [v for v in mand if v["verdict"] == "not_eligible"]
+    review = [v for v in mand if v["verdict"] == "needs_review"]
+    passed = [v for v in mand if v["verdict"] == "eligible"]
 
     if failed:
-        ov, bg, border, icon = "not_eligible", "#FEF2F2", "#FECACA", "❌"
-        summary = (f"Failed {len(failed)} mandatory criterion/criteria. "
-                   f"Must meet all mandatory criteria to qualify.")
+        ov, fg, icon = "not_eligible", "#EF4444", "❌"
+        summary = f"Failed {len(failed)} mandatory criterion/criteria. Must meet all to qualify."
     elif review:
-        ov, bg, border, icon = "needs_review", "#FFFBEB", "#FDE68A", "⚠️"
+        ov, fg, icon = "needs_review", "#F59E0B", "⚠️"
         summary = (f"Passed {len(passed)} mandatory criteria, but {len(review)} "
-                   f"could not be automatically confirmed and require officer sign-off.")
+                   f"require officer sign-off.")
     else:
-        ov, bg, border, icon = "eligible", "#F0FDF4", "#BBF7D0", "✅"
+        ov, fg, icon = "eligible", "#22C55E", "✅"
         summary = f"All {len(passed)} mandatory criteria satisfied."
 
-    bg2, fg2, _, label = _VERDICT_STYLE.get(ov, ("#F1F5F9", "#374151", "#CBD5E1", ov))
+    bg, _, label = _VERDICT_CFG.get(ov, ("rgba(128,128,128,0.1)", "#888", ov))
     st.markdown(
-        f'<div style="background:{bg2};border:1px solid {border};border-radius:12px;'
+        f'<div style="background:{bg};border:1px solid {fg}33;border-radius:12px;'
         f'padding:18px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:14px;">'
         f'<div style="font-size:2rem;line-height:1;">{icon}</div>'
         f'<div>'
-        f'<div style="font-weight:800;font-size:1.05rem;color:{fg2};">{company} — {label}</div>'
-        f'<div style="font-size:0.84rem;color:{fg2};opacity:0.85;margin-top:4px;">{summary}</div>'
+        f'<div style="font-weight:800;font-size:1.05rem;color:{fg};">'
+        f'{company} — {label}</div>'
+        f'<div style="font-size:0.84rem;color:{fg};opacity:0.85;margin-top:4px;">{summary}</div>'
         f'</div></div>',
         unsafe_allow_html=True,
     )
 
-    # Per-criterion breakdown
     st.markdown(
-        '<div style="font-size:1rem;font-weight:700;color:#0D1B2A;margin-bottom:12px;'
-        'font-family:Inter,sans-serif;">Criterion-by-Criterion Breakdown</div>',
+        '<div style="font-size:1rem;font-weight:700;color:var(--text-color);margin-bottom:12px;">'
+        'Criterion-by-Criterion Breakdown</div>',
         unsafe_allow_html=True,
     )
 
     for v in verdicts:
-        crit = crit_map.get(v["criterion_id"])
+        crit    = crit_map.get(v["criterion_id"])
         verdict = v.get("verdict", "needs_review")
-        cbg, cfg_, _, clabel = _VERDICT_STYLE.get(verdict, ("#F1F5F9", "#374151", "#CBD5E1", verdict))
+        cbg, cfg_, clabel = _VERDICT_CFG.get(verdict, ("rgba(128,128,128,0.1)", "var(--text-color)", verdict))
         mand_txt = "Mandatory" if (crit and crit.mandatory) else "Optional"
-        title = crit.title if crit else v["criterion_id"]
+        title    = crit.title if crit else v["criterion_id"]
 
         with st.container(border=True):
             left, right = st.columns([1, 3])
             with left:
                 st.markdown(
                     f'<div style="background:{cbg};border-radius:8px;padding:14px;'
-                    f'text-align:center;height:100%;min-height:80px;'
-                    f'display:flex;flex-direction:column;align-items:center;'
-                    f'justify-content:center;gap:6px;">'
+                    f'text-align:center;min-height:80px;display:flex;flex-direction:column;'
+                    f'align-items:center;justify-content:center;gap:6px;">'
                     f'<div style="font-weight:800;font-size:0.82rem;color:{cfg_};">{clabel}</div>'
-                    f'<div style="font-size:0.7rem;color:{cfg_};opacity:0.7;">{mand_txt}</div>'
+                    f'<div style="font-size:0.7rem;color:{cfg_};opacity:0.75;">{mand_txt}</div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
                 confidence_bar(v.get("combined_confidence", 0.0), "Certainty")
             with right:
                 st.markdown(
-                    f'<div style="font-weight:700;font-size:0.9rem;color:#0D1B2A;'
-                    f'font-family:Inter,sans-serif;">{v["criterion_id"]}: {title}</div>',
+                    f'<div style="font-weight:700;font-size:0.9rem;color:var(--text-color);">'
+                    f'{v["criterion_id"]}: {title}</div>',
                     unsafe_allow_html=True,
                 )
                 explanation = _explain(v, crit)
                 if explanation:
                     st.markdown(
-                        f'<p style="font-size:0.875rem;color:#374151;margin:8px 0;">{explanation}</p>',
+                        f'<p style="font-size:0.875rem;color:var(--text-color);'
+                        f'opacity:0.85;margin:8px 0;">{explanation}</p>',
                         unsafe_allow_html=True,
                     )
-                # Source citation
                 src = v.get("source") or {}
                 if src:
-                    doc = src.get("doc_name", "")
-                    page = src.get("page", "")
+                    doc, page = src.get("doc_name", ""), src.get("page", "")
                     tier_labels = {"text_pdf": "typed PDF", "tesseract": "Tesseract OCR",
                                    "vision_llm": "Vision LLM"}
                     tier = tier_labels.get(src.get("source_type", ""), "")
                     st.markdown(
                         f'<div style="display:inline-flex;align-items:center;gap:6px;'
-                        f'background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;'
-                        f'padding:5px 10px;font-size:0.78rem;">'
+                        f'background:rgba(128,128,128,0.08);border:1px solid rgba(128,128,128,0.2);'
+                        f'border-radius:6px;padding:5px 10px;font-size:0.78rem;">'
                         f'<span>📄</span>'
-                        f'<strong style="color:#1E40AF;">{doc}</strong>'
-                        f'<span style="color:#94A3B8;">page {page}</span>'
-                        f'<span style="color:#94A3B8;">·</span>'
-                        f'<span style="color:#64748B;">{tier}</span>'
+                        f'<strong style="color:#3B82F6;">{doc}</strong>'
+                        f'<span style="color:var(--text-color);opacity:0.5;">page {page}</span>'
+                        f'<span style="color:var(--text-color);opacity:0.3;">·</span>'
+                        f'<span style="color:var(--text-color);opacity:0.6;">{tier}</span>'
                         f'</div>',
                         unsafe_allow_html=True,
                     )
-                    # Inline page preview
                     doc_path = DATA_DIR / "bidders" / bid / doc
                     if doc_path.exists() and doc_path.suffix.lower() == ".pdf":
                         with st.expander(f"View source: {doc}, page {page}", expanded=False):
@@ -226,26 +217,24 @@ def render() -> None:
                             except Exception:
                                 st.caption("Page preview unavailable.")
                     elif doc_path.exists() and doc_path.suffix.lower() in {".png", ".jpg"}:
-                        with st.expander(f"View source image: {doc}", expanded=False):
+                        with st.expander(f"View: {doc}", expanded=False):
                             st.image(str(doc_path), use_column_width=True)
 
     st.divider()
 
-    # Q&A section
     st.markdown(
-        '<div style="font-size:1rem;font-weight:700;color:#0D1B2A;margin-bottom:4px;'
-        'font-family:Inter,sans-serif;">Ask About This Evaluation</div>'
-        '<p style="font-size:0.82rem;color:#64748B;margin-bottom:12px;">'
-        'The model answers using the evaluation data above and cites specific documents.</p>',
+        '<div style="font-size:1rem;font-weight:700;color:var(--text-color);margin-bottom:4px;">'
+        'Ask About This Evaluation</div>'
+        '<p style="font-size:0.82rem;color:var(--text-color);opacity:0.6;margin-bottom:12px;">'
+        'Answers cite specific documents and pages.</p>',
         unsafe_allow_html=True,
     )
 
-    examples = ["Why was this bidder rejected?",
-                "What turnover figure was found, and from which document?",
-                "Does this bidder have a valid ISO 9001:2015 certificate?",
-                "Why is the turnover verdict in review?"]
     with st.expander("Example questions", expanded=False):
-        for e in examples:
+        for e in ["Why was this bidder rejected?",
+                  "What turnover figure was found, and from which document?",
+                  "Does this bidder have a valid ISO 9001:2015 certificate?",
+                  "Why is the turnover verdict in review?"]:
             st.markdown(f"- _{e}_")
 
     question = st.text_input("", placeholder="Ask anything about this bidder's evaluation…",
@@ -258,12 +247,13 @@ def render() -> None:
             with st.spinner("Looking up the answer…"):
                 answer = _answer(question, context)
             st.markdown(
-                f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;'
+                f'<div style="background:rgba(37,99,235,0.08);'
+                f'border:1px solid rgba(37,99,235,0.2);border-radius:10px;'
                 f'padding:16px 18px;margin-top:8px;">'
-                f'<div style="font-size:0.72rem;font-weight:700;color:#1E40AF;'
+                f'<div style="font-size:0.72rem;font-weight:700;color:#3B82F6;'
                 f'text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Answer</div>'
-                f'<div style="font-size:0.9rem;color:#1E3A5F;line-height:1.7;">{answer}</div>'
-                f'</div>',
+                f'<div style="font-size:0.9rem;color:var(--text-color);line-height:1.7;">'
+                f'{answer}</div></div>',
                 unsafe_allow_html=True,
             )
             with st.expander("Full context used", expanded=False):
