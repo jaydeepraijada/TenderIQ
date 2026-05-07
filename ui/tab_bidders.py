@@ -178,26 +178,24 @@ def render() -> None:
 
                     reason  = v.get("reason", "")
                     snippet = (v.get("source") or {}).get("snippet", "")
-                    if reason or snippet:
-                        with st.expander("View reasoning & evidence", expanded=False):
-                            if reason:
-                                st.markdown(
-                                    f'<div style="background:rgba(37,99,235,0.08);'
-                                    f'border-left:3px solid #3B82F6;padding:10px 14px;'
-                                    f'border-radius:0 8px 8px 0;font-size:0.875rem;'
-                                    f'color:var(--text-color);">'
-                                    f'<strong>Reason:</strong> {reason}</div>',
-                                    unsafe_allow_html=True,
-                                )
-                            if snippet:
-                                st.markdown(
-                                    f'<div style="background:rgba(245,158,11,0.08);'
-                                    f'border-left:3px solid #F59E0B;padding:10px 14px;'
-                                    f'border-radius:0 8px 8px 0;margin-top:8px;'
-                                    f'font-size:0.84rem;color:var(--text-color);font-style:italic;">'
-                                    f'&ldquo;{snippet}&rdquo;</div>',
-                                    unsafe_allow_html=True,
-                                )
+                    if reason:
+                        st.markdown(
+                            f'<div style="background:rgba(37,99,235,0.08);'
+                            f'border-left:3px solid #3B82F6;padding:8px 12px;'
+                            f'border-radius:0 6px 6px 0;font-size:0.82rem;'
+                            f'color:var(--text-color);margin-top:2px;">'
+                            f'<strong>Reason:</strong> {reason}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    if snippet:
+                        st.markdown(
+                            f'<div style="background:rgba(245,158,11,0.08);'
+                            f'border-left:3px solid #F59E0B;padding:8px 12px;'
+                            f'border-radius:0 6px 6px 0;margin-top:4px;'
+                            f'font-size:0.81rem;color:var(--text-color);font-style:italic;">'
+                            f'&ldquo;{snippet}&rdquo;</div>',
+                            unsafe_allow_html=True,
+                        )
 
                     st.markdown(
                         '<hr style="margin:2px 0;border:none;'
