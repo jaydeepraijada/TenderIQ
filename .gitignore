@@ -35,3 +35,7 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated presentations (keep locally, don't track in git)
+deck/*.pptx
+deck/*.pdf
