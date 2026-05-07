@@ -6,7 +6,7 @@ colorTo: indigo
 sdk: docker
 pinned: true
 license: agpl-3.0
-short_description: Explainable AI for Government Tender Evaluation (CRPF Hackathon)
+short_description: Explainable AI for Government Tender Evaluation
 ---
 
 # TenderIQ — Explainable AI for Tender Evaluation
