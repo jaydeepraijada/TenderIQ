@@ -13,6 +13,10 @@ short_description: Explainable AI for Government Tender Evaluation
 
 > Built for the **CRPF Hackathon, Theme 3 — AI-Based Tender Evaluation and Eligibility Analysis for Government Procurement**
 
+[![Demo](https://img.shields.io/badge/Live%20Demo-HuggingFace%20Space-blue)](https://huggingface.co/spaces/JaydeepR/TenderIQ)
+[![GitHub](https://img.shields.io/badge/Source-GitHub-black)](https://github.com/jaydeepraijada/TenderIQ)
+[![Video](https://img.shields.io/badge/Demo%20Video-YouTube-red)](https://youtu.be/Yi6ZPLnbISA)
+
 TenderIQ automates the eligibility evaluation of bidders against government tender criteria. It extracts structured criteria from any tender PDF, processes bidder documents through a three-tier OCR pipeline, evaluates each (bidder × criterion) pair using a language model with combined confidence scoring, and surfaces ambiguous cases for human review — all with a complete, exportable audit trail.
 
 ---
