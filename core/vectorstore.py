@@ -7,8 +7,14 @@ from core.config import CHROMA_DIR
 
 @st.cache_resource
 def get_client():
+    import shutil
     import chromadb
-    return chromadb.PersistentClient(path=CHROMA_DIR)
+    try:
+        return chromadb.PersistentClient(path=CHROMA_DIR)
+    except ValueError:
+        # Stale or version-incompatible .chroma directory — wipe and recreate
+        shutil.rmtree(CHROMA_DIR, ignore_errors=True)
+        return chromadb.PersistentClient(path=CHROMA_DIR)
 
 
 def get_collection(name: str):
