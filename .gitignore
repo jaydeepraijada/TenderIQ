@@ -39,3 +39,12 @@ Thumbs.db
 # Generated presentations (keep locally, don't track in git)
 deck/*.pptx
 deck/*.pdf
+
+# Internal planning / session docs — not for the repo
+idea.md
+IMPLEMENTATION_PLAN.md
+presentation_creation.md
+submission_requirements.md
+theme.md
+understanding.md
+specs/
