@@ -118,87 +118,89 @@ def render() -> None:
                 unsafe_allow_html=True,
             )
 
-            # Column headers
-            st.markdown(
-                '<div style="display:grid;grid-template-columns:2.5fr 1.6fr 1.8fr 2.2fr 1.4fr;'
-                'gap:8px;padding:6px 2px;border-top:1px solid rgba(128,128,128,0.15);'
-                'border-bottom:1px solid rgba(128,128,128,0.15);margin-bottom:4px;">'
-                + "".join(
-                    f'<div style="font-size:0.68rem;font-weight:700;'
-                    f'color:var(--text-color);opacity:0.4;'
-                    f'text-transform:uppercase;letter-spacing:0.07em;">{h}</div>'
-                    for h in ["Criterion", "Verdict", "Extracted Value", "Source & Tier", "Category"]
+            with st.expander(f"View all {len(verdicts)} criteria", expanded=False):
+                # Column headers
+                st.markdown(
+                    '<div style="display:grid;grid-template-columns:2.5fr 1.6fr 1.8fr 2.2fr 1.4fr;'
+                    'gap:8px;padding:6px 2px;border-top:1px solid rgba(128,128,128,0.15);'
+                    'border-bottom:1px solid rgba(128,128,128,0.15);margin-bottom:4px;">'
+                    + "".join(
+                        f'<div style="font-size:0.68rem;font-weight:700;color:var(--text-color);'
+                        f'opacity:0.4;text-transform:uppercase;letter-spacing:0.07em;">{h}</div>'
+                        for h in ["Criterion", "Verdict", "Extracted Value", "Source & Tier", "Category"]
+                    )
+                    + "</div>",
+                    unsafe_allow_html=True,
                 )
-                + "</div>",
-                unsafe_allow_html=True,
-            )
 
-            for v in verdicts:
-                crit = crit_map.get(v["criterion_id"])
-                title = crit.title if crit else v["criterion_id"]
-                mb  = mandatory_badge(crit.mandatory if crit else True)
-                cat = category_badge(crit.category if crit else "compliance")
-                extracted = v.get("extracted_value") or ""
-                src = v.get("source") or {}
+                for v in verdicts:
+                    crit = crit_map.get(v["criterion_id"])
+                    title = crit.title if crit else v["criterion_id"]
+                    mb  = mandatory_badge(crit.mandatory if crit else True)
+                    cat = category_badge(crit.category if crit else "compliance")
+                    extracted = v.get("extracted_value") or ""
+                    src = v.get("source") or {}
 
-                src_html = '<span style="color:var(--text-color);opacity:0.3;">—</span>'
-                if src:
-                    tier = ocr_tier_badge(src.get("source_type", "text_pdf"))
-                    src_html = (
-                        f'<span style="font-family:monospace;font-size:0.78rem;'
-                        f'background:rgba(128,128,128,0.1);padding:2px 5px;border-radius:4px;'
-                        f'border:1px solid rgba(128,128,128,0.2);'
-                        f'color:var(--text-color);">{src.get("doc_name","")}</span>'
-                        f' <span style="font-size:0.75rem;color:var(--text-color);opacity:0.5;">'
-                        f'p{src.get("page","")}</span>'
-                        f'<br><div style="margin-top:4px;">{tier}</div>'
+                    src_html = '<span style="color:var(--text-color);opacity:0.3;">—</span>'
+                    if src:
+                        tier = ocr_tier_badge(src.get("source_type", "text_pdf"))
+                        src_html = (
+                            f'<span style="font-family:monospace;font-size:0.78rem;'
+                            f'background:rgba(128,128,128,0.1);padding:2px 5px;border-radius:4px;'
+                            f'border:1px solid rgba(128,128,128,0.2);color:var(--text-color);">'
+                            f'{src.get("doc_name","")}</span>'
+                            f' <span style="font-size:0.75rem;color:var(--text-color);opacity:0.5;">'
+                            f'p{src.get("page","")}</span>'
+                            f'<br><div style="margin-top:4px;">{tier}</div>'
+                        )
+
+                    extracted_cell = (
+                        f'<span style="font-size:0.84rem;color:var(--text-color);">{extracted}</span>'
+                        if extracted else
+                        '<span style="color:var(--text-color);opacity:0.3;">—</span>'
                     )
 
-                extracted_cell = (
-                    f'<span style="font-size:0.84rem;color:var(--text-color);">{extracted}</span>'
-                    if extracted else
-                    '<span style="color:var(--text-color);opacity:0.3;">—</span>'
-                )
+                    st.markdown(
+                        f'<div style="display:grid;'
+                        f'grid-template-columns:2.5fr 1.6fr 1.8fr 2.2fr 1.4fr;'
+                        f'gap:8px;padding:10px 2px;align-items:start;">'
+                        f'<div>{mb}<div style="font-size:0.85rem;font-weight:600;'
+                        f'color:var(--text-color);margin-top:5px;">'
+                        f'{v["criterion_id"]}: {title}</div></div>'
+                        f'<div style="padding-top:2px;">{verdict_pill(v["verdict"])}</div>'
+                        f'<div style="padding-top:4px;">{extracted_cell}</div>'
+                        f'<div style="font-size:0.82rem;">{src_html}</div>'
+                        f'<div style="padding-top:2px;">{cat}</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+                    confidence_bar(v.get("combined_confidence", 0.0))
 
-                st.markdown(
-                    f'<div style="display:grid;grid-template-columns:2.5fr 1.6fr 1.8fr 2.2fr 1.4fr;'
-                    f'gap:8px;padding:10px 2px;align-items:start;">'
-                    f'<div>{mb}<div style="font-size:0.85rem;font-weight:600;'
-                    f'color:var(--text-color);margin-top:5px;">'
-                    f'{v["criterion_id"]}: {title}</div></div>'
-                    f'<div style="padding-top:2px;">{verdict_pill(v["verdict"])}</div>'
-                    f'<div style="padding-top:4px;">{extracted_cell}</div>'
-                    f'<div style="font-size:0.82rem;">{src_html}</div>'
-                    f'<div style="padding-top:2px;">{cat}</div>'
-                    f'</div>',
-                    unsafe_allow_html=True,
-                )
-                confidence_bar(v.get("combined_confidence", 0.0))
+                    reason  = v.get("reason", "")
+                    snippet = (v.get("source") or {}).get("snippet", "")
+                    if reason or snippet:
+                        with st.expander("View reasoning & evidence", expanded=False):
+                            if reason:
+                                st.markdown(
+                                    f'<div style="background:rgba(37,99,235,0.08);'
+                                    f'border-left:3px solid #3B82F6;padding:10px 14px;'
+                                    f'border-radius:0 8px 8px 0;font-size:0.875rem;'
+                                    f'color:var(--text-color);">'
+                                    f'<strong>Reason:</strong> {reason}</div>',
+                                    unsafe_allow_html=True,
+                                )
+                            if snippet:
+                                st.markdown(
+                                    f'<div style="background:rgba(245,158,11,0.08);'
+                                    f'border-left:3px solid #F59E0B;padding:10px 14px;'
+                                    f'border-radius:0 8px 8px 0;margin-top:8px;'
+                                    f'font-size:0.84rem;color:var(--text-color);font-style:italic;">'
+                                    f'&ldquo;{snippet}&rdquo;</div>',
+                                    unsafe_allow_html=True,
+                                )
 
-                reason  = v.get("reason", "")
-                snippet = (v.get("source") or {}).get("snippet", "")
-                if reason or snippet:
-                    with st.expander("View reasoning & evidence", expanded=False):
-                        if reason:
-                            st.markdown(
-                                f'<div style="background:rgba(37,99,235,0.08);'
-                                f'border-left:3px solid #3B82F6;padding:10px 14px;'
-                                f'border-radius:0 8px 8px 0;font-size:0.875rem;'
-                                f'color:var(--text-color);"><strong>Reason:</strong> {reason}</div>',
-                                unsafe_allow_html=True,
-                            )
-                        if snippet:
-                            st.markdown(
-                                f'<div style="background:rgba(245,158,11,0.08);'
-                                f'border-left:3px solid #F59E0B;padding:10px 14px;'
-                                f'border-radius:0 8px 8px 0;margin-top:8px;font-size:0.84rem;'
-                                f'color:var(--text-color);font-style:italic;">'
-                                f'&ldquo;{snippet}&rdquo;</div>',
-                                unsafe_allow_html=True,
-                            )
-
-                st.markdown(
-                    '<hr style="margin:2px 0;border:none;'
-                    'border-top:1px solid rgba(128,128,128,0.1);">',
-                    unsafe_allow_html=True,
-                )
+                    st.markdown(
+                        '<hr style="margin:2px 0;border:none;'
+                        'border-top:1px solid rgba(128,128,128,0.1);">',
+                        unsafe_allow_html=True,
+                    )

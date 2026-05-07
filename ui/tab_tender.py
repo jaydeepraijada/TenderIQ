@@ -78,11 +78,7 @@ def render() -> None:
     if st.session_state.get("fallback_active"):
         st.warning("⚠ Live API unavailable — showing pre-computed criteria.")
 
-    st.markdown(
-        f'<div style="font-size:0.9rem;font-weight:700;color:#0D1B2A;margin:1rem 0 0.5rem;">'
-        f'Extracted {len(criteria_data)} criteria</div>',
-        unsafe_allow_html=True,
-    )
+    st.caption(f"{len(criteria_data)} criteria — click × to remove any you don't want evaluated.")
 
     for c in criteria_data:
         icon     = _CAT_ICONS.get(c["category"], "⚪")
@@ -95,17 +91,25 @@ def render() -> None:
             rule_str += f' {rule["unit"]}'
         rule_str += "`"
 
-        with st.expander(
-            f'{icon} **{c["id"]}** — {c["title"]}  ·  {mand_lbl}',
-            expanded=False,
-        ):
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                st.markdown(f"**Description:** {c['description']}")
-                st.markdown(f"**Rule:** {rule_str}")
-                if c.get("query_hints"):
-                    hints = "  ·  ".join(f"`{h}`" for h in c["query_hints"])
-                    st.markdown(f"**Query hints:** {hints}")
-            with col2:
-                st.markdown(f"**Category:** {c['category'].capitalize()}")
-                st.markdown(f"**Source:** Page {c['source_page']}, Clause `{c['source_clause']}`")
+        btn_col, exp_col = st.columns([0.04, 0.96])
+        with btn_col:
+            if st.button("×", key=f"rm_{c['id']}", help=f"Remove {c['id']}"):
+                st.session_state["criteria"] = [
+                    x for x in criteria_data if x["id"] != c["id"]
+                ]
+                st.rerun()
+        with exp_col:
+            with st.expander(
+                f'{icon} **{c["id"]}** — {c["title"]}  ·  {mand_lbl}',
+                expanded=False,
+            ):
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.markdown(f"**Description:** {c['description']}")
+                    st.markdown(f"**Rule:** {rule_str}")
+                    if c.get("query_hints"):
+                        hints = "  ·  ".join(f"`{h}`" for h in c["query_hints"])
+                        st.markdown(f"**Query hints:** {hints}")
+                with col2:
+                    st.markdown(f"**Category:** {c['category'].capitalize()}")
+                    st.markdown(f"**Source:** Page {c['source_page']}, Clause `{c['source_clause']}`")
