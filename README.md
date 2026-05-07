@@ -3,9 +3,7 @@ title: TenderIQ
 emoji: ⚖️
 colorFrom: blue
 colorTo: indigo
-sdk: streamlit
-sdk_version: 1.39.0
-app_file: app.py
+sdk: docker
 pinned: true
 license: agpl-3.0
 short_description: Explainable AI for Government Tender Evaluation (CRPF Hackathon)
