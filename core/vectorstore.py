@@ -7,14 +7,11 @@ from core.config import CHROMA_DIR
 
 @st.cache_resource
 def get_client():
-    import shutil
     import chromadb
-    try:
-        return chromadb.PersistentClient(path=CHROMA_DIR)
-    except ValueError:
-        # Stale or version-incompatible .chroma directory — wipe and recreate
-        shutil.rmtree(CHROMA_DIR, ignore_errors=True)
-        return chromadb.PersistentClient(path=CHROMA_DIR)
+    # EphemeralClient (in-memory) avoids all ChromaDB 0.5.x tenant/SQLite
+    # compatibility issues. The index is rebuilt each evaluation run, so
+    # persistence is not needed.
+    return chromadb.EphemeralClient()
 
 
 def get_collection(name: str):

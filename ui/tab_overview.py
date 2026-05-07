@@ -27,7 +27,7 @@ def render() -> None:
     )
 
     # KPIs
-    criteria_count = len(st.session_state.get("criteria", load_criteria()))
+    criteria_count = len(st.session_state.get("criteria") or [])
     verdicts       = st.session_state.get("verdicts", {})
     checked        = sum(1 for bv in verdicts.values() for _ in bv)
     audit_count    = len(audit.query())
